@@ -11,6 +11,7 @@ space and produces a super-resolved image in one pass.
 
 ## Installation
 
+> [!TIP]
 > **Quick Start** — if your environment already has PyTorch (with CUDA), `transformers==4.57.x`, and `diffusers>=0.37`, you don't need to build a new conda env. Just install the small set of utility deps the inference code pulls eagerly and you're ready to run the diffusers backbones (`flux`/`flux2`/`sd3`/`zimage`):
 >
 > ```bash
@@ -51,35 +52,6 @@ the Hugging Face Hub. Pull just the `checkpoints/` tree into this repo:
 hf download nvidia/PiD --local-dir . --include "checkpoints/*"
 ```
 
-The `--include "checkpoints/*"` filter scopes the download to the
-`checkpoints/` tree only — the Hub repo's own `README.md` and `figures/` are
-skipped so they won't overwrite the ones in this codebase.
-
-
-| Backbone | `--pid_ckpt_type 2k` (default) | `--pid_ckpt_type 2kto4k` |
-|----------|--------------------------------|--------------------------|
-| flux     | `checkpoints/PiD_res2k_sr4x_official_flux_distill_4step`      | `checkpoints/PiD_res2kto4k_sr4x_official_flux_distill_4step`  |
-| flux2    | `checkpoints/PiD_res2k_sr4x_official_flux2_distill_4step`     | `checkpoints/PiD_res2kto4k_sr4x_official_flux2_distill_4step` |
-| sd3      | `checkpoints/PiD_res2k_sr4x_official_sd3_distill_4step`       | `checkpoints/PiD_res2kto4k_sr4x_official_sd3_distill_4step`   |
-| zimage   | reuses `flux` (Z-Image shares Flux's VAE)                     | reuses `flux` 2kto4k                                           |
-| dinov2   | `checkpoints/PiD_res2k_sr4x_official_dinov2_distill_4step`    | —                                                              |
-| siglip   | `checkpoints/PiD_res2k_sr8x_official_siglip_distill_4step`    | —                                                              |
-
-All released checkpoints are 4-step distilled. The `flux` / `flux2` / `sd3` /
-`zimage` / `dinov2` checkpoints decode at 4× upscale; the `siglip` checkpoint
-decodes at 8× (256 → 2048 — Scale-RAE's native interface). `dinov2` / `siglip`
-have no `2kto4k` variant. The exact paths are resolved by
-`pid/_src/inference/checkpoint_registry.py`.
-
-Sample inputs are in `assets/`:
-
-- `assets/clean_image_manifest.jsonl` — manifest used by the `from_clean_*`
-  demos to drive a batch over multiple images.
-- A few JPG/PNG samples referenced by that manifest.
-
-Prompt files for the `from_ldm_*` demos are in
-`pid/_src/inference/prompts/`.
-
 ## Running inference
 
 PiD ships two complementary entry points per backbone:
@@ -89,25 +61,26 @@ PiD ships two complementary entry points per backbone:
 | flux     | `from_clean_flux.py`    | `from_ldm_flux.py`    |
 | flux2    | `from_clean_flux2.py`   | `from_ldm_flux2.py`   |
 | sd3      | `from_clean_sd3.py`     | `from_ldm_sd3.py`     |
-| zimage   | —                       | `from_ldm_zimage.py`  |
+| zimage   | reuses `flux`           | `from_ldm_zimage.py`  |
 | dinov2   | `from_clean_dinov2.py`  | `from_ldm_dinov2.py`  |
 | siglip   | `from_clean_siglip.py`  | `from_ldm_siglip.py`  |
 
 All scripts live under `pid/_src/inference/` and decode each captured latent
 twice — once with the backbone's native VAE (baseline) and once with PiD.
 
-### Picking the checkpoint variant — `--pid_ckpt_type`
-
-Every entry point accepts `--pid_ckpt_type {2k,2kto4k}` (default `2k`):
-
-- **`2k`** — the original 2048px-trained decoder.
-- **`2kto4k`** — the up-to-4K-resolution decoder. Available for `flux` / `flux2` / `sd3` / `zimage` only. Worse than `2k` at 2048px resolution.
-
-A quick sanity check that the right variant loaded: when `2kto4k` is active you
+> [!IMPORTANT]
+> Picking the checkpoint variant — `--pid_ckpt_type`
+> Every entry point accepts `--pid_ckpt_type {2k,2kto4k}` (default `2k`):
+>
+> - **`2k`** — the original 2048px-trained decoder.
+> - **`2kto4k`** — the up-to-4K-resolution decoder. > > Available for `flux` / `flux2` / `sd3` / `zimage` only. Worse than `2k` at 2048px resolution.
+>
+> For the exact checkpoint path for each backbone, see [docs/checkpoints.md](docs/checkpoints.md).
+> A quick sanity check that the right variant loaded: when `2kto4k` is active you
 should see `PixelDiT dynamic shift: base_shift=4.0 base_image_size=1024` in the
 init log; for `2k` that line is absent. Both `2k` and `2kto4k` support non-square aspect ratios.
 
-### `from_ldm_*`: text / class → latent diffusion → PiD decode
+### 📕 `from_ldm_*`: text / class → latent diffusion → PiD decode
 
 Runs the corresponding latent-diffusion backbone on a prompt (or class id for
 the class-conditional `dinov2` backbone), captures the intermediate `x_t` at
@@ -179,7 +152,7 @@ examples.
 | zimage   | `--ldm_inference_steps` | 50            | `40 42 44 46 48`         | 46  |
 
 ---
-### `from_clean_*`: image → VAE encode → PiD decode
+### 📗 `from_clean_*`: image → VAE encode → PiD decode
 
 No latent diffusion model is run. The input image is encode by VAE,
 optionally corrupted with Gaussian noise at each
@@ -209,7 +182,7 @@ see [`docs/dinov2_siglip.md`](docs/dinov2_siglip.md).
 | Flag | Meaning |
 |------|---------|
 | `--pid_inference_steps`| Number of denoising steps for PiD (4 for the released distilled checkpoints) |
-| `--scale`              | PiD upscale factor (output = `baseline * scale`); 4 for the released checkpoints |
+| `--scale`              | PiD upscale factor (output = `baseline * scale`); 8 for Scale-RAE and 4 for other backbones |
 | `--cfg_scale`          | Classifier-free guidance scale for PiD |
 | `--output_dir`         | Where to write the side-by-side comparison images |
 | `--seed`               | Base random seed |
