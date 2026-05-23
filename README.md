@@ -220,7 +220,7 @@ pid/_src/inference/
 
 ## License
 
-This project is licensed under the [Apache License 2.0](LICENSE).
+PiD codebase is licensed under the [Apache License 2.0](LICENSE).
 
 ## Contributing
 
