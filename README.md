@@ -228,6 +228,9 @@ PiD codebase is licensed under the [Apache License 2.0](LICENSE).
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for development setup, code style,
 and the DCO sign-off requirement.
 
+## Acknowledgments
+
+The authors would like to thank Product Managers Aditya Mahajan and Matt Cragun for their valuable guidance and support.
 
 ## Citation
 
