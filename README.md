@@ -1,16 +1,12 @@
 # PiD — Pixel Diffusion Decoder
 
+> **TL;DR** — PiD is a plug-and-play diffusion decoder that replaces VAE/RAE decoders, turning latent representations directly into super-resolved pixels in a single pass.
+
 <p align="center">
   <img src="figures/teaser.jpg" alt="PiD teaser" width="100%">
 </p>
 
-
-
-
 https://github.com/user-attachments/assets/a556e2d4-5de5-4bcf-9daa-80f7ea6b2124
-
-
-
 
 PiD reformulates the latent-to-pixel decoder as a conditional pixel-space diffusion
 model, unifying decoding and upsampling into a single generative module.
