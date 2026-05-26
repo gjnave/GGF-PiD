@@ -1,11 +1,19 @@
-# DINOv2-RAE / SigLIP-2 Scale-RAE LDM backbones
+# DINOv2 / SigLIP-2 from Clean Image
+The `dinov2` and `siglip` `from_clean_*` flows accept the same flags as the
+diffusers backbones (see the main README) but with different
+`--input_resolution` and `--scale` defaults to match each tokenizer's native
+interface:
 
-The `dinov2` and `siglip` entry points (`from_clean_dinov2`,
-`from_clean_siglip`, `from_ldm_dinov2`, `from_ldm_siglip`) wrap two
+- `dinov2` → `--input_resolution 512 --scale 4` (512 → 2048)
+- `siglip` → `--input_resolution 256 --scale 8` (256 → 2048)
+
+
+# DINOv2 RAE / SigLIP-2 from Latent Diffusion Model
+
+The `dinov2` and `siglip` entry points (`from_ldm_dinov2`, `from_ldm_siglip`) wrap two
 latent-diffusion models that are **not** distributed through `diffusers` —
 the upstream class-conditional ImageNet-512 [RAE](https://github.com/bytetriper/RAE)
 and the text-conditional 256px [Scale-RAE](https://github.com/ZitengWangNYU/Scale-RAE).
-`from_clean_*` needs the RAE / Scale-RAE tokenizer decoder weights only;
 `from_ldm_*` additionally needs the upstream LDM repos on `sys.path`.
 
 > [!NOTE]
@@ -29,9 +37,14 @@ cd pid
 
 # 2) Install Scale-RAE (--no-deps because its pyproject pins torch/torchvision/
 #    transformers/tokenizers that would clobber the rest of the env). Then add
-#    the runtime deps the upstream code actually needs, plus pin transformers
-#    to 4.57.x — Scale-RAE's custom Qwen LM is tightly coupled to the 4.x API
-#    and silently produces garbage embeddings on transformers 5.x.
+#    the runtime deps the upstream code actually needs.
+#
+#    IMPORTANT — downgrade transformers to <5: Scale-RAE's custom Qwen LM is
+#    tightly coupled to the transformers 4.x API. On transformers 5.x the LM
+#    silently emits degenerate image embeddings (16×16 tile pattern) without
+#    raising. The base environment.yml leaves transformers unpinned (the core
+#    diffusers backbones work on both 4.x and 5.x); this pin is *only* needed
+#    if you use the siglip / Scale-RAE backbone.
 #
 #    Expected: the second `pip install` prints ~10 lines of
 #      "scale-rae 1.0.0 requires <pkg>==<old-version>, but you have …"
@@ -43,6 +56,7 @@ cd pid
 #    end-to-end against the versions installed below.
 pip install --no-deps -e ../Scale-RAE
 pip install torchdiffeq timm omegaconf ezcolorlog shortuuid open_clip_torch accelerate
+pip install "transformers==4.57.1"
 
 # 3) Point the demos at the repos. The CLI flags fall back to these env vars,
 #    which default to ../RAE and ../Scale-RAE (sibling of the pid working tree).
@@ -87,16 +101,3 @@ Suggested step counts (see each script's docstring for the exact recipe):
 |----------|-------------------------|---------------|-----------------------------|
 | dinov2   | `--num_inference_steps` | 50            | `44 46 48`                  |
 | siglip   | (no flag; LM-driven)    | —             | `44 46 48`                  |
-
-## `from_clean_*`: image → encode → PiD decode
-
-The `dinov2` and `siglip` `from_clean_*` flows accept the same flags as the
-diffusers backbones (see the main README) but with different
-`--input_resolution` and `--scale` defaults to match each tokenizer's native
-interface:
-
-- `dinov2` → `--input_resolution 512 --scale 4` (512 → 2048)
-- `siglip` → `--input_resolution 256 --scale 8` (256 → 2048)
-
-Keep `--degrade_sigmas` in `[0, 0.5]` — RAE's normalized DINOv2 / SigLIP-2
-features tolerate less added noise than standard VAE latents.

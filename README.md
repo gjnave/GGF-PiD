@@ -35,14 +35,14 @@ space and produces a super-resolved image in one pass.
 > **Quick Start** — if your environment already has PyTorch (with CUDA), `transformers>=4.57.x`, and `diffusers>=0.37`, you don't need to build a new conda env. Just install the small set of utility deps the inference code pulls eagerly and you're ready to run the diffusers backbones (`flux`/`flux2`/`sd3`/`zimage`/`zimage_turbo`):
 >
 > ```bash
-> pip install hydra-core==1.3.2 omegaconf==2.3.0 \
->     attrs einops loguru termcolor fvcore iopath pynvml wandb \
+> pip install hydra-core omegaconf pyyaml \
+>     attrs einops loguru termcolor fvcore iopath wandb \
 >     imageio opencv-python-headless pandas \
->     safetensors "huggingface-hub>=1.0" sentencepiece boto3 botocore
+>     safetensors sentencepiece boto3 botocore
 > pip install -e .
 > ```
->
-> For the `dinov2` / `siglip` backbones you additionally need the upstream RAE / Scale-RAE repos plus a couple of extra packages — see [docs/dinov2_siglip.md](docs/dinov2_siglip.md).
+> To validate your environment is ready for inference, run `python verify_env.py`.
+
 
 Full conda-managed install (preferred if you're starting from scratch):
 
