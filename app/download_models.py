@@ -4,6 +4,8 @@ import os
 import shutil
 from pathlib import Path
 
+os.environ.setdefault("HF_HUB_DISABLE_XET", "1")
+
 from huggingface_hub import snapshot_download
 
 
@@ -43,6 +45,7 @@ def _seed_local_hf_cache(repo_id: str) -> None:
 def main() -> None:
     os.environ.setdefault("HF_HOME", str(CACHE_ROOT))
     os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")
+    os.environ.setdefault("HF_HUB_DISABLE_XET", "1")
 
     print("[MODELS] Downloading official PiD Flux-compatible assets from nvidia/PiD")
     snapshot_download(

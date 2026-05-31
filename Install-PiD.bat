@@ -10,6 +10,7 @@ IF EXIST "disclaimer.md" (
 title Install PiD Decoder Studio
 set "HF_HOME=%~dp0.hf_home"
 set "HF_HUB_DISABLE_SYMLINKS_WARNING=1"
+set "HF_HUB_DISABLE_XET=1"
 
 echo ============================================
 echo         Install PiD Decoder Studio

@@ -34,6 +34,7 @@ PRESET_CONFIG = {
 
 os.environ.setdefault("HF_HOME", str(CACHE_ROOT))
 os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")
+os.environ.setdefault("HF_HUB_DISABLE_XET", "1")
 
 
 def _tensor_to_pil(sample: torch.Tensor) -> Image.Image:

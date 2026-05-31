@@ -20,6 +20,7 @@ This repository is the public source for the GGF Windows/NVIDIA standalone PiD a
   3. run `Install-PiD.bat`
   4. launch with `run.bat`
 - Runtime should use the app-local Hugging Face cache at `.hf_home`.
+- Installer and runtime set `HF_HUB_DISABLE_XET=1` to avoid Windows Xet transfer hangs.
 - `run.bat` intentionally sets `HF_HUB_OFFLINE=1` and `TRANSFORMERS_OFFLINE=1` after installation.
 
 ## Maintenance Notes
