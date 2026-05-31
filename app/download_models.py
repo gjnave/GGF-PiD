@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import shutil
+import subprocess
 from pathlib import Path
 
 os.environ.setdefault("HF_HUB_DISABLE_XET", "1")
@@ -11,12 +12,6 @@ from huggingface_hub import snapshot_download
 
 ROOT = Path(__file__).resolve().parents[1]
 CACHE_ROOT = ROOT / ".hf_home"
-
-ALLOW_PATTERNS = [
-    "checkpoints/ae.safetensors",
-    "checkpoints/PiD_res2k_sr4x_official_flux_distill_4step/*",
-    "checkpoints/PiD_res2kto4k_sr4x_official_flux_distill_4step/*",
-]
 
 CHECKPOINT_FILES = [
     Path("checkpoints/ae.safetensors"),
@@ -64,6 +59,40 @@ def _seed_checkpoint_files() -> None:
                 break
 
 
+def _download_checkpoint_files() -> None:
+    curl_exe = shutil.which("curl.exe") or shutil.which("curl")
+    if curl_exe is None:
+        raise RuntimeError("curl.exe is required to download PiD checkpoint files on Windows.")
+
+    for relative_path in CHECKPOINT_FILES:
+        target_path = ROOT / relative_path
+        if target_path.exists() and target_path.stat().st_size > 0:
+            print(f"[SKIP] {relative_path}")
+            continue
+
+        target_path.parent.mkdir(parents=True, exist_ok=True)
+        url = f"https://huggingface.co/nvidia/PiD/resolve/main/{relative_path.as_posix()}"
+        print(f"[DOWNLOADING] {relative_path}")
+        subprocess.run(
+            [
+                curl_exe,
+                "-L",
+                "--fail",
+                "--retry",
+                "12",
+                "--retry-delay",
+                "5",
+                "--retry-all-errors",
+                "--continue-at",
+                "-",
+                "--output",
+                str(target_path),
+                url,
+            ],
+            check=True,
+        )
+
+
 def main() -> None:
     os.environ.setdefault("HF_HOME", str(CACHE_ROOT))
     os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")
@@ -71,11 +100,7 @@ def main() -> None:
 
     print("[MODELS] Downloading official PiD Flux-compatible assets from nvidia/PiD")
     _seed_checkpoint_files()
-    snapshot_download(
-        repo_id="nvidia/PiD",
-        local_dir=str(ROOT),
-        allow_patterns=ALLOW_PATTERNS,
-    )
+    _download_checkpoint_files()
 
     print("[MODELS] Priming Gemma caption model cache for offline first run")
     _seed_local_hf_cache("Efficient-Large-Model/gemma-2-2b-it")
