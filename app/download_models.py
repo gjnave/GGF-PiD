@@ -44,18 +44,22 @@ def _seed_local_hf_cache(repo_id: str) -> None:
 
 
 def _seed_checkpoint_files() -> None:
+    search_roots = [ROOT.parent, ROOT.parent.parent]
     for relative_path, expected_size in CHECKPOINT_FILES.items():
         target_path = ROOT / relative_path
         if target_path.exists() and target_path.stat().st_size == expected_size:
             continue
 
-        for candidate in ROOT.parent.glob(f"*/{relative_path.as_posix()}"):
-            if ROOT in candidate.parents:
-                continue
-            if candidate.is_file():
-                target_path.parent.mkdir(parents=True, exist_ok=True)
-                print(f"[MODELS] Reusing local checkpoint: {relative_path}")
-                shutil.copy2(candidate, target_path)
+        for search_root in search_roots:
+            for candidate in search_root.glob(f"*/{relative_path.as_posix()}"):
+                if ROOT in candidate.parents:
+                    continue
+                if candidate.is_file() and candidate.stat().st_size == expected_size:
+                    target_path.parent.mkdir(parents=True, exist_ok=True)
+                    print(f"[MODELS] Reusing local checkpoint: {relative_path}")
+                    shutil.copy2(candidate, target_path)
+                    break
+            if target_path.exists() and target_path.stat().st_size == expected_size:
                 break
 
 
