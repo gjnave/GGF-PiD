@@ -13,11 +13,11 @@ from huggingface_hub import snapshot_download
 ROOT = Path(__file__).resolve().parents[1]
 CACHE_ROOT = ROOT / ".hf_home"
 
-CHECKPOINT_FILES = [
-    Path("checkpoints/ae.safetensors"),
-    Path("checkpoints/PiD_res2k_sr4x_official_flux_distill_4step/model_ema_bf16.pth"),
-    Path("checkpoints/PiD_res2kto4k_sr4x_official_flux_distill_4step/model_ema_bf16.pth"),
-]
+CHECKPOINT_FILES = {
+    Path("checkpoints/ae.safetensors"): 335_304_388,
+    Path("checkpoints/PiD_res2k_sr4x_official_flux_distill_4step/model_ema_bf16.pth"): 2_724_842_961,
+    Path("checkpoints/PiD_res2kto4k_sr4x_official_flux_distill_4step/model_ema_bf16.pth"): 2_724_842_961,
+}
 
 GEMMA_PATTERNS = [
     "config.json",
@@ -44,9 +44,9 @@ def _seed_local_hf_cache(repo_id: str) -> None:
 
 
 def _seed_checkpoint_files() -> None:
-    for relative_path in CHECKPOINT_FILES:
+    for relative_path, expected_size in CHECKPOINT_FILES.items():
         target_path = ROOT / relative_path
-        if target_path.exists():
+        if target_path.exists() and target_path.stat().st_size == expected_size:
             continue
 
         for candidate in ROOT.parent.glob(f"*/{relative_path.as_posix()}"):
@@ -64,11 +64,13 @@ def _download_checkpoint_files() -> None:
     if curl_exe is None:
         raise RuntimeError("curl.exe is required to download PiD checkpoint files on Windows.")
 
-    for relative_path in CHECKPOINT_FILES:
+    for relative_path, expected_size in CHECKPOINT_FILES.items():
         target_path = ROOT / relative_path
-        if target_path.exists() and target_path.stat().st_size > 0:
+        if target_path.exists() and target_path.stat().st_size == expected_size:
             print(f"[SKIP] {relative_path}")
             continue
+        if target_path.exists() and target_path.stat().st_size > expected_size:
+            target_path.unlink()
 
         target_path.parent.mkdir(parents=True, exist_ok=True)
         url = f"https://huggingface.co/nvidia/PiD/resolve/main/{relative_path.as_posix()}"
