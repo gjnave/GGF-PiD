@@ -32,12 +32,15 @@ body, .gradio-container {
     font-family: "Segoe UI", Arial, sans-serif;
 }
 .gradio-container {
-    max-width: 1320px !important;
+    max-width: none !important;
+    width: 100% !important;
+    padding: 18px 24px !important;
 }
 .brand-hero {
     border: 1px solid rgba(19, 21, 23, 0.12);
     border-radius: 8px;
-    padding: 28px 32px;
+    padding: 20px 24px;
+    margin-bottom: 12px;
     background:
         linear-gradient(120deg, rgba(19, 21, 23, 0.96), rgba(20, 93, 105, 0.90)),
         repeating-linear-gradient(90deg, rgba(255,255,255,0.08) 0, rgba(255,255,255,0.08) 1px, transparent 1px, transparent 18px);
@@ -48,7 +51,7 @@ body, .gradio-container {
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
 }
 .brand-badge {
     display: inline-flex;
@@ -69,15 +72,15 @@ body, .gradio-container {
 }
 .brand-hero h1 {
     margin: 0;
-    font-size: 40px;
+    font-size: 34px;
     line-height: 1.02;
     color: #fff8ec !important;
 }
 .brand-copy {
-    max-width: 860px;
+    max-width: 980px;
     color: #f1e8d9;
-    font-size: 16px;
-    margin: 14px 0 12px;
+    font-size: 15px;
+    margin: 10px 0 8px;
 }
 .brand-chips {
     display: flex;
@@ -88,7 +91,7 @@ body, .gradio-container {
 .brand-chip {
     border: 1px solid rgba(255, 248, 236, 0.22);
     border-radius: 999px;
-    padding: 6px 10px;
+    padding: 5px 10px;
     color: #fff8ec;
     background: rgba(255, 248, 236, 0.08);
     font-size: 13px;
@@ -96,8 +99,28 @@ body, .gradio-container {
 .panel {
     border: 1px solid var(--ggf-line);
     border-radius: 8px;
-    padding: 16px;
+    padding: 12px;
     background: rgba(255, 252, 245, 0.92);
+}
+.main-grid {
+    gap: 14px !important;
+    align-items: flex-start !important;
+}
+.control-panel {
+    max-width: 560px;
+}
+.output-panel {
+    min-width: 720px;
+}
+.output-grid {
+    gap: 14px !important;
+}
+.primary-output img,
+.secondary-output img {
+    object-fit: contain !important;
+}
+.status-box textarea {
+    min-height: 180px !important;
 }
 .run-button button, .run-button, button.primary, .gradio-button.primary {
     background: linear-gradient(180deg, #e4553d, var(--ggf-red)) !important;
@@ -137,10 +160,10 @@ def build_app() -> gr.Blocks:
             "</div>"
         )
 
-        with gr.Row():
-            with gr.Column(scale=6):
+        with gr.Row(elem_classes=["main-grid"]):
+            with gr.Column(scale=5, min_width=420, elem_classes=["control-panel"]):
                 with gr.Group(elem_classes=["panel"]):
-                    input_image = gr.Image(label="Input image", type="filepath")
+                    input_image = gr.Image(label="Input image", type="filepath", height=470)
                     prompt = gr.Textbox(label="Prompt", lines=3, placeholder="Describe the image for PiD caption conditioning.")
                     preset = gr.Radio(
                         choices=["2K Decode", "4K Decode"],
@@ -159,11 +182,34 @@ def build_app() -> gr.Blocks:
                         unload_button = gr.Button("Unload model", elem_classes=["utility-button"])
                         refresh_button = gr.Button("Refresh status", elem_classes=["utility-button"])
 
-            with gr.Column(scale=5):
-                pid_output = gr.Image(label="PiD output", type="filepath", height=400)
-                compare_strip = gr.Image(label="Comparison strip", type="filepath", height=220)
-                vae_output = gr.Image(label="VAE baseline", type="filepath", height=220)
-                status_box = gr.Textbox(label="Status / log", value=model_status(), lines=16, elem_classes=["status-box"])
+            with gr.Column(scale=14, min_width=720, elem_classes=["output-panel"]):
+                with gr.Row(elem_classes=["output-grid"]):
+                    with gr.Column(scale=8, min_width=520):
+                        pid_output = gr.Image(
+                            label="PiD output",
+                            type="filepath",
+                            height=710,
+                            elem_classes=["primary-output"],
+                        )
+                    with gr.Column(scale=6, min_width=430):
+                        compare_strip = gr.Image(
+                            label="Comparison strip",
+                            type="filepath",
+                            height=255,
+                            elem_classes=["secondary-output"],
+                        )
+                        vae_output = gr.Image(
+                            label="VAE baseline",
+                            type="filepath",
+                            height=255,
+                            elem_classes=["secondary-output"],
+                        )
+                        status_box = gr.Textbox(
+                            label="Status / log",
+                            value=model_status(),
+                            lines=9,
+                            elem_classes=["status-box"],
+                        )
 
         run_button.click(
             fn=decode_image,
