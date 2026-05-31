@@ -29,6 +29,7 @@ MANIFEST
 
 # huggingface
 .hf
+.hf_home/
 
 # Virtual environments
 .env
@@ -77,6 +78,9 @@ outputs/
 logs/
 wandb/
 eval_results
+package/
+work/
+*.zip
 
 # Temporary files
 *.log

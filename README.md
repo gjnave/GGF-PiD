@@ -15,6 +15,16 @@ space and produces a super-resolved image in one pass.
 
 **[Paper](https://arxiv.org/abs/2605.23902), [Project Page](https://research.nvidia.com/labs/sil/projects/pid/), [Model Weights](https://huggingface.co/nvidia/PiD)**
 
+## GGF Windows standalone
+
+This fork includes a simple Windows/NVIDIA standalone app flow:
+
+1. Run `Install-PiD.bat`
+2. Wait for the local `.venv`, PiD checkpoints, and Gemma caption cache to finish installing
+3. Run `run.bat`
+
+The browser UI lives in `app/app.py` and uses the official PiD Flux-compatible clean decode path for local image decoding.
+
 [Yifan Lu](https://yifanlu0227.github.io/),
 [Qi Wu](https://wilsoncernwq.github.io/),
 [Jay Zhangjie Wu](https://zhangjiewu.github.io/),
