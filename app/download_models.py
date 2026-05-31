@@ -18,6 +18,12 @@ ALLOW_PATTERNS = [
     "checkpoints/PiD_res2kto4k_sr4x_official_flux_distill_4step/*",
 ]
 
+CHECKPOINT_FILES = [
+    Path("checkpoints/ae.safetensors"),
+    Path("checkpoints/PiD_res2k_sr4x_official_flux_distill_4step/model_ema_bf16.pth"),
+    Path("checkpoints/PiD_res2kto4k_sr4x_official_flux_distill_4step/model_ema_bf16.pth"),
+]
+
 GEMMA_PATTERNS = [
     "config.json",
     "generation_config.json",
@@ -42,12 +48,29 @@ def _seed_local_hf_cache(repo_id: str) -> None:
     shutil.copytree(default_repo_dir, local_repo_dir, dirs_exist_ok=True)
 
 
+def _seed_checkpoint_files() -> None:
+    for relative_path in CHECKPOINT_FILES:
+        target_path = ROOT / relative_path
+        if target_path.exists():
+            continue
+
+        for candidate in ROOT.parent.glob(f"*/{relative_path.as_posix()}"):
+            if ROOT in candidate.parents:
+                continue
+            if candidate.is_file():
+                target_path.parent.mkdir(parents=True, exist_ok=True)
+                print(f"[MODELS] Reusing local checkpoint: {relative_path}")
+                shutil.copy2(candidate, target_path)
+                break
+
+
 def main() -> None:
     os.environ.setdefault("HF_HOME", str(CACHE_ROOT))
     os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")
     os.environ.setdefault("HF_HUB_DISABLE_XET", "1")
 
     print("[MODELS] Downloading official PiD Flux-compatible assets from nvidia/PiD")
+    _seed_checkpoint_files()
     snapshot_download(
         repo_id="nvidia/PiD",
         local_dir=str(ROOT),
