@@ -1,0 +1,257 @@
+GGF PID DECODER STUDIO
+AI AGENT INSTALLATION INSTRUCTIONS
+
+Purpose
+-------
+This file is designed to be handed to an AI coding agent or desktop assistant.
+If the user has only this file, the agent should be able to install GGF PiD
+Decoder Studio on a Windows NVIDIA machine and leave the user with a simple
+click-to-run launcher.
+
+GGF means Get Going Fast. The goal is not to hide complexity. The goal is to
+handle the setup carefully, keep everything in a clean user-owned folder, and
+leave the user with a reliable local app.
+
+
+What This App Is
+----------------
+GGF PiD Decoder Studio is a local browser GUI for NVIDIA PiD.
+
+In practical terms, this app behaves like an AI image upscaler/enhancer:
+
+- The user provides an input image.
+- PiD encodes and decodes it through the official Flux-compatible PiD path.
+- The app produces a higher-resolution PiD output plus comparison images.
+
+It is not a full text-to-image generator.
+
+
+Important Rules For The Agent
+-----------------------------
+1. Do not install this app in system folders.
+   Do not use:
+   - C:\Windows
+   - C:\Program Files
+   - C:\Program Files (x86)
+   - System32
+   - protected OS folders
+
+2. Ask the user which drive they want to use.
+   Recommended default:
+   - C:
+
+3. Install under this layout:
+
+   <DRIVE>:\GGF\GGF-PiD\
+       CLICK-ME-TO-RUN.bat
+       INSTALL-OR-UPDATE.bat
+       START-HERE.txt
+       repo\
+           cloned GitHub repository goes here
+
+4. Clone the public GitHub repo into:
+
+   <DRIVE>:\GGF\GGF-PiD\repo
+
+5. Do not commit, move, or delete user files.
+
+6. If a command fails, read the error and fix the actual problem.
+   Do not blindly rerun destructive commands.
+
+7. Use a Python virtual environment inside the repo only.
+
+8. The app requires Windows 11 or compatible Windows, Python 3.10 or 3.11, Git,
+   internet access for setup, and an NVIDIA CUDA GPU.
+
+
+Public Repository
+-----------------
+Repo URL:
+
+https://github.com/gjnave/GGF-PiD.git
+
+
+Human Conversation Script
+-------------------------
+Before installing, ask the user:
+
+"Which drive do you want to install GGF PiD on? I recommend C: unless you want
+to use another drive with more free space."
+
+After the user answers, use that drive letter as <DRIVE>.
+
+If the user says "use the default", use C:.
+
+
+Installation Steps
+------------------
+Open PowerShell or Command Prompt as the normal user. Administrator is not
+required and is not preferred.
+
+Replace C: below with the drive chosen by the user.
+
+1. Create the GGF app folder:
+
+   mkdir C:\GGF
+   mkdir C:\GGF\GGF-PiD
+
+2. Clone or update the repo:
+
+   If C:\GGF\GGF-PiD\repo\.git exists:
+
+      git -C C:\GGF\GGF-PiD\repo pull --ff-only
+
+   Otherwise:
+
+      git clone https://github.com/gjnave/GGF-PiD.git C:\GGF\GGF-PiD\repo
+
+3. Run the repo installer:
+
+      C:\GGF\GGF-PiD\repo\Install-PiD.bat
+
+   This will:
+   - create a local .venv
+   - install CUDA PyTorch
+   - install app dependencies
+   - download or reuse PiD model files
+   - prime the local Hugging Face cache
+
+4. Create C:\GGF\GGF-PiD\CLICK-ME-TO-RUN.bat with this exact content:
+
+      @echo off
+      setlocal
+      cd /d "%~dp0repo"
+      call "%~dp0repo\run.bat"
+
+5. Create C:\GGF\GGF-PiD\INSTALL-OR-UPDATE.bat with this exact content:
+
+      @echo off
+      setlocal
+      cd /d "%~dp0"
+
+      where git >nul 2>nul
+      if errorlevel 1 (
+        echo [ERROR] Git is not installed or not on PATH.
+        echo Install Git for Windows, then run this again.
+        pause
+        exit /b 1
+      )
+
+      if exist "%~dp0repo\.git" (
+        echo [SETUP] Updating GGF PiD...
+        git -C "%~dp0repo" pull --ff-only
+        if errorlevel 1 goto :fail
+      ) else (
+        echo [SETUP] Cloning GGF PiD...
+        git clone https://github.com/gjnave/GGF-PiD.git "%~dp0repo"
+        if errorlevel 1 goto :fail
+      )
+
+      call "%~dp0repo\Install-PiD.bat"
+      if errorlevel 1 goto :fail
+
+      echo.
+      echo [DONE] Install/update complete.
+      echo Use CLICK-ME-TO-RUN.bat to start GGF PiD.
+      pause
+      exit /b 0
+
+      :fail
+      echo.
+      echo [ERROR] Install/update failed.
+      pause
+      exit /b 1
+
+6. Create C:\GGF\GGF-PiD\START-HERE.txt with this content:
+
+      GGF PiD Decoder Studio
+
+      To start the app:
+      Double-click CLICK-ME-TO-RUN.bat
+
+      To install updates or repair the install:
+      Double-click INSTALL-OR-UPDATE.bat
+
+      The app opens in your browser. It starts at port 7868. If that port is
+      busy, it automatically tries the next available port.
+
+      Installed repo:
+      C:\GGF\GGF-PiD\repo
+
+      Public repo:
+      https://github.com/gjnave/GGF-PiD
+
+
+Smoke Test
+----------
+After installation, verify it starts.
+
+1. Run:
+
+      C:\GGF\GGF-PiD\CLICK-ME-TO-RUN.bat
+
+2. Watch the command window.
+
+3. Confirm the browser opens to a local URL such as:
+
+      http://127.0.0.1:7868
+
+   If 7868 is busy, it may use:
+
+      http://127.0.0.1:7869
+      http://127.0.0.1:7870
+
+4. Confirm the page title/header says:
+
+      PiD Decoder Studio
+
+5. Confirm the status panel says the GPU is available and checkpoint assets
+   are present.
+
+6. Optional deeper smoke test:
+   Upload a small image, leave the default 2K Decode preset, and run Decode
+   with PiD. A successful run writes outputs inside:
+
+      C:\GGF\GGF-PiD\repo\outputs
+
+
+Troubleshooting
+---------------
+If Git is missing:
+Install Git for Windows from https://git-scm.com/download/win and rerun
+INSTALL-OR-UPDATE.bat.
+
+If Python is missing:
+Install Python 3.10 or 3.11 from https://www.python.org/downloads/windows/.
+During install, enable "Add python.exe to PATH" or make sure the Python
+launcher "py" is installed.
+
+If model download fails:
+Rerun INSTALL-OR-UPDATE.bat. The installer uses resumable curl downloads for
+large PiD checkpoint files and validates the expected file sizes.
+
+If the app says CUDA is unavailable:
+Confirm the machine has an NVIDIA GPU and a working NVIDIA driver.
+
+If port 7868 is busy:
+No action is usually needed. The app tries the next open port automatically.
+
+
+Final Expected Result
+---------------------
+The user should end up with:
+
+   C:\GGF\GGF-PiD\CLICK-ME-TO-RUN.bat
+   C:\GGF\GGF-PiD\INSTALL-OR-UPDATE.bat
+   C:\GGF\GGF-PiD\START-HERE.txt
+   C:\GGF\GGF-PiD\repo\
+
+The user starts the app by double-clicking:
+
+   CLICK-ME-TO-RUN.bat
+
+The repository remains cleanly isolated inside:
+
+   C:\GGF\GGF-PiD\repo
+
+Nothing is installed into Windows system folders.

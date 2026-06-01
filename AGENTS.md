@@ -14,6 +14,7 @@ This repository is the public source for the GGF Windows/NVIDIA standalone PiD a
 
 - Do not commit model files, checkpoints, `.venv`, `.hf_home`, outputs, or zip files.
 - The distribution installer should live outside the cloned app folder and clone this repo from GitHub.
+- The member-facing secondary install guide is `AGENT-INSTALL-GGF-PID.txt`.
 - The expected install flow is:
   1. `git clone https://github.com/gjnave/GGF-PiD.git`
   2. `cd GGF-PiD`
