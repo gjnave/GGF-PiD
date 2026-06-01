@@ -92,11 +92,11 @@ Install the app under the drive chosen by the user:
     <DRIVE>:\GGF\GGF-PiD\
         CLICK-ME-TO-RUN.bat
         START-HERE.txt
-        repo\
+        GGF-PiD\
 
 The GitHub repository must be cloned into:
 
-    <DRIVE>:\GGF\GGF-PiD\repo
+    <DRIVE>:\GGF\GGF-PiD\GGF-PiD
 
 Public repository:
 
@@ -114,17 +114,17 @@ Replace C: with the drive chosen by the user.
 
 2. Clone or update the app source:
 
-    If C:\GGF\GGF-PiD\repo\.git exists:
+    If C:\GGF\GGF-PiD\GGF-PiD\.git exists:
 
-        git -C C:\GGF\GGF-PiD\repo pull --ff-only
+        git -C C:\GGF\GGF-PiD\GGF-PiD pull --ff-only
 
     Otherwise:
 
-        git clone https://github.com/gjnave/GGF-PiD.git C:\GGF\GGF-PiD\repo
+        git clone https://github.com/gjnave/GGF-PiD.git C:\GGF\GGF-PiD\GGF-PiD
 
-3. Run the app's repo installer:
+3. Run the app's install script:
 
-        C:\GGF\GGF-PiD\repo\Install-PiD.bat
+        C:\GGF\GGF-PiD\GGF-PiD\Install-PiD.bat
 
    This creates the venv, installs Python packages, installs CUDA PyTorch,
    downloads/reuses PiD model files, and prepares the local app cache.
@@ -137,8 +137,8 @@ Replace C: with the drive chosen by the user.
 
         @echo off
         setlocal
-        cd /d "%~dp0repo"
-        call "%~dp0repo\run.bat"
+        cd /d "%~dp0GGF-PiD"
+        call "%~dp0GGF-PiD\run.bat"
 
 5. Create this short user instruction file:
 
@@ -154,10 +154,10 @@ Replace C: with the drive chosen by the user.
         Installed app folder:
         C:\GGF\GGF-PiD
 
-        Installed repo:
-        C:\GGF\GGF-PiD\repo
+        Installed app files:
+        C:\GGF\GGF-PiD\GGF-PiD
 
-        Public repo:
+        Public GitHub page:
         https://github.com/gjnave/GGF-PiD
 
         The app opens in your browser. It starts at port 7868. If that port is
@@ -199,7 +199,7 @@ If that port is busy, the app may use:
 
 Successful outputs are written to:
 
-    C:\GGF\GGF-PiD\repo\outputs
+    C:\GGF\GGF-PiD\GGF-PiD\outputs
 
 
 Troubleshooting
@@ -217,7 +217,7 @@ If model download fails:
 
 Run this again:
 
-    C:\GGF\GGF-PiD\repo\Install-PiD.bat
+    C:\GGF\GGF-PiD\GGF-PiD\Install-PiD.bat
 
 The app uses resumable curl downloads for the large PiD checkpoint files and
 checks expected file sizes.
@@ -236,5 +236,5 @@ When finished, tell the user:
     <DRIVE>:\GGF\GGF-PiD\CLICK-ME-TO-RUN.bat
 
 Do not leave the user with only a GitHub URL.
-Do not leave the user with only a repo folder.
+Do not leave the user with only a cloned source folder.
 Leave them with an installed app and a clear click-to-run file.
