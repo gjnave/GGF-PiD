@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import socket
 from pathlib import Path
 
 import gradio as gr
@@ -10,6 +11,7 @@ from pid_runtime import decode_image, model_status, unload_model
 
 
 ROOT = Path(__file__).resolve().parents[1]
+PORT_TRIES = 20
 
 CSS = """
 :root {
@@ -222,6 +224,23 @@ def build_app() -> gr.Blocks:
     return app
 
 
+def _find_open_port(host: str, preferred_port: int) -> int:
+    bind_host = host
+    if host in ("0.0.0.0", "::"):
+        bind_host = "127.0.0.1"
+
+    for port in range(preferred_port, preferred_port + PORT_TRIES):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            try:
+                sock.bind((bind_host, port))
+            except OSError:
+                continue
+            return port
+
+    raise RuntimeError(f"No open port found from {preferred_port} to {preferred_port + PORT_TRIES - 1}.")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="GGF PiD standalone app")
     parser.add_argument("--host", default=os.environ.get("GGF_HOST", "127.0.0.1"))
@@ -229,9 +248,13 @@ def main() -> None:
     args = parser.parse_args()
 
     ROOT.joinpath("outputs").mkdir(exist_ok=True)
+    port = _find_open_port(args.host, args.port)
+    if port != args.port:
+        print(f"[PORT] {args.port} is busy. Using {port} instead.")
+
     build_app().queue(default_concurrency_limit=1).launch(
         server_name=args.host,
-        server_port=args.port,
+        server_port=port,
         inbrowser=True,
         theme=gr.themes.Soft(primary_hue="red", neutral_hue="stone"),
         css=CSS,
